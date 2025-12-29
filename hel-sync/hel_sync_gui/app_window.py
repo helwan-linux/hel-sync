@@ -1,14 +1,14 @@
-import sys
-from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QLabel, QListWidget, 
-                             QProgressBar, QHBoxLayout, QFrame)
+import os, subprocess
+from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QPushButton, QLabel, 
+                             QListWidget, QHBoxLayout, QTextEdit, QFileDialog)
 from PyQt5.QtCore import Qt, pyqtSignal, QObject
-from PyQt5.QtGui import QFont, QIcon, QPixmap
+from PyQt5.QtGui import QFont, QPixmap
 import qrcode
 from io import BytesIO
+from hel_sync_core import network_server as server
 
 class CommSignals(QObject):
-    """إشارات الربط بين السيرفر والواجهة"""
-    file_received = pyqtSignal(str) # تستقبل اسم الملف
+    file_received = pyqtSignal(str)
     text_received = pyqtSignal(str)
 
 class HelSyncGUI(QWidget):
@@ -16,94 +16,88 @@ class HelSyncGUI(QWidget):
         super().__init__()
         self.url = url
         self.comm = CommSignals()
-        self.total_files = 0
         self.init_ui()
-        
-        # ربط الإشارات بالدوال
-        self.comm.file_received.connect(self.update_file_list)
-        self.comm.text_received.connect(self.show_new_text)
+        self.comm.file_received.connect(self.add_to_list)
+        self.comm.text_received.connect(lambda t: self.clip_display.setPlainText(t))
 
     def init_ui(self):
-        self.setWindowTitle("Hel-Sync Pro - Arch Linux")
-        self.setFixedSize(450, 650)
-        self.setStyleSheet("background-color: #0c0c0c; color: white;")
-
+        self.setWindowTitle("Hel-Sync Pro Control")
+        self.setFixedSize(500, 750)
+        self.setStyleSheet("background: #0c0c0c; color: #eee;")
         layout = QVBoxLayout()
 
-        # 1. قسم الـ QR Code
+        # 1. QR Code
         self.qr_label = QLabel()
         self.qr_label.setAlignment(Qt.AlignCenter)
-        self.generate_qr()
+        self.gen_qr()
         layout.addWidget(self.qr_label)
 
-        # 2. معلومات الاتصال
-        info_label = QLabel("Scan to Sync (Mobile + PC)")
-        info_label.setFont(QFont("Segoe UI", 10, QFont.Bold))
-        info_label.setAlignment(Qt.AlignCenter)
-        info_label.setStyleSheet("color: #a349a4;")
-        layout.addWidget(info_label)
+        # 2. إرسال ملفات من الكمبيوتر
+        btn_layout = QHBoxLayout()
+        self.send_btn = QPushButton("📁 Select & Send Files")
+        self.send_btn.setStyleSheet("background: #a349a4; padding: 10px; font-weight: bold;")
+        self.send_btn.clicked.connect(self.open_file_dialog)
+        
+        self.open_folder_btn = QPushButton("📂 Open Downloads")
+        self.open_folder_btn.setStyleSheet("background: #333; padding: 10px;")
+        self.open_folder_btn.clicked.connect(self.open_download_folder)
+        
+        btn_layout.addWidget(self.send_btn)
+        btn_layout.addWidget(self.open_folder_btn)
+        layout.addLayout(btn_layout)
 
-        # 3. عداد البيانات (Stats Frame)
-        stats_frame = QFrame()
-        stats_frame.setStyleSheet("background-color: #161616; border-radius: 10px; border: 1px solid #333;")
-        stats_layout = QHBoxLayout(stats_frame)
+        # 3. قسم النصوص
+        layout.addWidget(QLabel("📋 Clipboard Sync:"))
+        self.clip_display = QTextEdit()
+        self.clip_display.setMaximumHeight(80)
+        self.clip_display.setStyleSheet("background: #161616; border: 1px solid #a349a4;")
+        layout.addWidget(self.clip_display)
         
-        self.file_count_label = QLabel("Files: 0")
-        self.file_count_label.setFont(QFont("Consolas", 11))
+        clip_btns = QHBoxLayout()
+        self.send_clip_btn = QPushButton("📤 Send Text to Mobile")
+        self.send_clip_btn.clicked.connect(self.send_text_to_mobile)
         
-        status_dot = QLabel("● Online")
-        status_dot.setStyleSheet("color: #28a745; border: none;")
+        self.copy_clip_btn = QPushButton("✂️ Copy Received Text")
+        self.copy_clip_btn.clicked.connect(lambda: QApplication.clipboard().setText(self.clip_display.toPlainText()))
         
-        stats_layout.addWidget(self.file_count_label)
-        stats_layout.addStretch()
-        stats_layout.addWidget(status_dot)
-        layout.addWidget(stats_frame)
+        clip_btns.addWidget(self.send_clip_btn)
+        clip_btns.addWidget(self.copy_clip_btn)
+        layout.addLayout(clip_btns)
 
         # 4. قائمة الملفات المستلمة
-        layout.addWidget(QLabel("Recently Received Files:"))
+        layout.addWidget(QLabel("✅ Recently Received Files:"))
         self.file_list = QListWidget()
-        self.file_list.setStyleSheet("""
-            QListWidget {
-                background-color: #1a1a1a;
-                border: 1px solid #333;
-                border-radius: 8px;
-                padding: 5px;
-            }
-            QListWidget::item {
-                padding: 10px;
-                border-bottom: 1px solid #222;
-            }
-        """)
+        self.file_list.setStyleSheet("background: #1a1a1a; border-radius: 5px;")
         layout.addWidget(self.file_list)
-
-        # 5. آخر نص مستلم
-        layout.addWidget(QLabel("Last Clipboard Sync:"))
-        self.clip_label = QLabel("Waiting for text...")
-        self.clip_label.setWordWrap(True)
-        self.clip_label.setStyleSheet("background: #000; padding: 10px; border-left: 3px solid #007bff;")
-        layout.addWidget(self.clip_label)
 
         self.setLayout(layout)
 
-    def generate_qr(self):
-        qr = qrcode.QRCode(box_size=8, border=2)
-        qr.add_data(self.url)
-        qr.make(fit=True)
-        img = qr.make_image(fill_color="#a349a4", back_color="black")
-        
-        buffer = BytesIO()
-        img.save(buffer, format="PNG")
-        pixmap = QPixmap()
-        pixmap.loadFromData(buffer.getvalue())
-        self.qr_label.setPixmap(pixmap)
+    def gen_qr(self):
+        qr = qrcode.make(self.url)
+        buf = BytesIO(); qr.save(buf, "PNG")
+        pix = QPixmap(); pix.loadFromData(buf.getvalue())
+        self.qr_label.setPixmap(pix.scaled(200, 200))
 
-    def update_file_list(self, filename):
-        self.total_files += 1
-        self.file_count_label.setText(f"Files: {self.total_files}")
-        self.file_list.insertItem(0, f"✓ {filename}") # إضافة الملف في أول القائمة
-        
-    def show_new_text(self, text):
-        self.clip_label.setText(text)
+    def open_file_dialog(self):
+        paths, _ = QFileDialog.getOpenFileNames(self, "Select Files to Share")
+        if paths:
+            server.FILES_TO_SHARE.extend(paths)
+            self.add_to_list(f"Shared {len(paths)} files to mobile")
+
+    def open_download_folder(self):
+        path = os.path.expanduser("~/Downloads/HelSync")
+        # دعم فتح المجلد في آرتش (Linux) وويندوز
+        if os.name == 'nt': os.startfile(path)
+        else: subprocess.Popen(['xdg-open', path])
+
+    def send_text_to_mobile(self):
+        text = self.clip_display.toPlainText()
+        if text:
+            server.LATEST_CLIPBOARD = text
+            self.add_to_list("Text sent to mobile")
+
+    def add_to_list(self, text):
+        self.file_list.insertItem(0, f"• {text}")
 
     def launch(self):
         self.show()
