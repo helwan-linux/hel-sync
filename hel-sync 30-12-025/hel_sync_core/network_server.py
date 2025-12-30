@@ -193,8 +193,12 @@ def download(file_id):
 @app.route('/get_clip')
 def get_clip():
     token = request.args.get('token')
-    if token != ACCESS_TOKEN: abort(403)
-    return jsonify({"text": CLIP_HISTORY.get(ACCESS_TOKEN, "")})
+    if token != ACCESS_TOKEN: 
+        return jsonify({"text": "Invalid Token"}), 403
+    
+    # سحب النص من القاموس اللي ربطناه فوق في الـ main
+    current_text = CLIP_HISTORY.get(token, "No text shared yet")
+    return jsonify({"text": current_text})
 
 def start_network_service(gui_cb, clip_cb, token, perm_cb, prog_cb):
     global gui_callback, clip_callback, ACCESS_TOKEN, permission_callback
