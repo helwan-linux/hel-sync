@@ -7,7 +7,10 @@ from PyQt5.QtGui import QPixmap, QIcon
 import qrcode
 from io import BytesIO
 
-# --- دالة تنسيق الحجم (مستقلة لمنع أخطاء الـ AttributeError في الـ Threads) ---
+# الربط مع ملف السيرفر للتحكم في البيانات الحقيقية
+from hel_sync_core import network_server as srv
+
+# دالة تنسيق الحجم الأصلية
 def helper_format_size(s):
     if s == 0: return "0B"
     try:
@@ -15,7 +18,6 @@ def helper_format_size(s):
         return f"{round(s / math.pow(1024, i), 2)} {['B', 'KB', 'MB', 'GB'][i]}"
     except: return f"{s} B"
 
-# --- كلاس الـ Thread المسؤول عن تحديث العداد أثناء الإرسال الحقيقي ---
 class SendWorker(QThread):
     progress = pyqtSignal(int, str)
     finished = pyqtSignal()
@@ -25,27 +27,15 @@ class SendWorker(QThread):
         self.files = files
 
     def run(self):
+        # تحديث قائمة الملفات في السيرفر ليراها الموبايل فوراً
+        srv.FILES_TO_SHARE = self.files
         for file_path in self.files:
             if not os.path.exists(file_path): continue
             file_name = os.path.basename(file_path)
-            total_size = os.path.getsize(file_path)
-            bytes_sent = 0
-            
-            # محاكاة إرسال الملف (هنا يربط مع كود السوكيت الفعلي في hel_sync_core)
-            with open(file_path, 'rb') as f:
-                chunk_size = 1024 * 1024 # 1MB chunk
-                while bytes_sent < total_size:
-                    chunk = f.read(chunk_size)
-                    if not chunk: break
-                    
-                    time.sleep(0.01) # تأخير بسيط لرؤية العداد يتحرك
-                    bytes_sent += len(chunk)
-                    
-                    percent = int((bytes_sent / total_size) * 100)
-                    if percent > 100: percent = 100
-                    
-                    stats = f"Sending: {file_name} | {helper_format_size(bytes_sent)} / {helper_format_size(total_size)}"
-                    self.progress.emit(percent, stats)
+            for p in range(0, 101, 10):
+                time.sleep(0.05)
+                stats = f"Sharing: {file_name} | Ready for Mobile"
+                self.progress.emit(p, stats)
         self.finished.emit()
 
 class CommSignals(QObject):
@@ -166,11 +156,21 @@ class HelSyncGUI(QWidget):
     def start_sending_action(self):
         if not self.pending_files: return
         self.btn_send.setEnabled(False)
-        self.db_title.setText("Status: Transferring...")
+        self.db_title.setText("Status: Syncing with Server...")
         self.worker = SendWorker(self.pending_files)
         self.worker.progress.connect(self.update_progress_ui)
-        self.worker.finished.connect(lambda: self.db_title.setText("Status: Transfer Finished!"))
+        self.worker.finished.connect(lambda: self.db_title.setText("Status: Files Shared Successfully!"))
         self.worker.start()
+
+    def send_text_action(self):
+        txt = self.out_clip.toPlainText().strip()
+        if txt:
+            # ربط حقيقي: إرسال النص لقاموس السيرفر ليراه الموبايل
+            srv.CLIP_HISTORY[srv.ACCESS_TOKEN] = txt
+            self.db_title.setText("Status: Text shared successfully!")
+            self.tray_icon.showMessage("Hel-Sync", "Text pushed to mobile portal", QSystemTrayIcon.Information)
+        else:
+            QMessageBox.warning(self, "Empty", "Please enter some text first!")
 
     def show_qr_popup(self):
         qr = qrcode.make(self.url); b = BytesIO(); qr.save(b, "PNG")
@@ -193,13 +193,12 @@ class HelSyncGUI(QWidget):
             self.btn_send.setText(f"SEND {len(self.pending_files)} FILES")
 
     def stop_sharing(self):
-        from hel_sync_core import network_server as srv
-        srv.FILES_TO_SHARE = []
+        srv.FILES_TO_SHARE = [] 
         self.pending_files = []
         self.s_list.clear()
         self.btn_send.setEnabled(False)
         self.btn_send.setText("2. START SENDING")
-        self.db_title.setText("Status: Stopped")
+        self.db_title.setText("Status: Sharing Terminated")
 
     def ask_perm(self, count, size):
         QApplication.beep()
@@ -207,8 +206,7 @@ class HelSyncGUI(QWidget):
         msg.setWindowTitle("INCOMING REQUEST")
         msg.setText(f"Mobile wants to send {count} files ({size})")
         msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
-        self.is_ok = (msg.exec_() == QMessageBox.Yes)
-        if self.is_ok: self.db_title.setText("Status: Receiving Files...")
+        return msg.exec_() == QMessageBox.Yes
 
     def add_received(self, n, s):
         self.r_list.insertItem(0, f"✅ {n} ({self.format_size(s)})")
@@ -218,28 +216,14 @@ class HelSyncGUI(QWidget):
         self.prog.setValue(val)
         self.db_stats.setText(stats)
 
-    def send_text_action(self):
-        txt = self.out_clip.toPlainText().strip()
-        if txt:
-            self.db_title.setText("Status: Text shared!")
-            self.tray_icon.showMessage("Hel-Sync", "Text shared to mobile", QSystemTrayIcon.Information)
-
     def open_dir(self):
         p = os.path.expanduser("~/Downloads/HelSync")
         if not os.path.exists(p): os.makedirs(p)
         if os.name == 'nt': os.startfile(p)
         else: subprocess.Popen(['xdg-open', p])
 
-    def show_help(self): QMessageBox.information(self, "HELP", "Add files then Start Sending.")
+    def show_help(self): QMessageBox.information(self, "HELP", "1. Add files.\n2. Click Start Sending.")
     def show_about(self): QMessageBox.about(self, "ABOUT", "Hel-Sync Pro v3.6")
 
-    # --- رجعت دالة الـ launch عشان ملف الـ main.py يشتغل ---
-    def launch(self):
+    def launch(self): 
         self.show()
-
-if __name__ == "__main__":
-    import sys
-    app = QApplication(sys.argv)
-    window = HelSyncGUI("http://localhost:5000")
-    window.launch()
-    sys.exit(app.exec_())
