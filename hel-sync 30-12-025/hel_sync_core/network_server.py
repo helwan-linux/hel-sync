@@ -22,7 +22,6 @@ def index():
     token = request.args.get('token')
     if token != ACCESS_TOKEN: abort(403)
     
-    # تحضير أسماء الملفات للعرض
     display_files = [os.path.basename(f) for f in FILES_TO_SHARE]
     
     return render_template_string('''
@@ -36,6 +35,7 @@ def index():
                 button { background: #007bff; color: white; border: none; padding: 10px; border-radius: 5px; width: 100%; cursor: pointer; font-weight: bold; }
                 textarea { width: 100%; background: #222; color: #0f0; border: 1px solid #444; padding: 10px; box-sizing: border-box; border-radius: 5px; }
                 .file-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #333; text-align: left; }
+                .selected-list { text-align: left; font-size: 12px; color: #aaa; margin: 10px 0; background: #222; border-radius: 5px; padding: 5px; }
                 h4 { color: #a349a4; margin: 5px 0; }
             </style>
         </head>
@@ -51,9 +51,10 @@ def index():
 
             <div class="card">
                 <h4>Upload to PC</h4>
-                <form action="/upload" method="post" enctype="multipart/form-data">
+                <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
                     <input type="hidden" name="token" value="{{token}}">
-                    <input type="file" name="files" multiple style="margin-bottom:10px;">
+                    <input type="file" name="files" id="fileInput" multiple style="margin-bottom:10px;" onchange="updateSelectedList()">
+                    <div id="selectedFiles" class="selected-list">No files selected yet</div>
                     <button type="submit">UPLOAD FILES</button>
                 </form>
             </div>
@@ -73,13 +74,24 @@ def index():
             </div>
 
             <script>
+                function updateSelectedList() {
+                    const input = document.getElementById('fileInput');
+                    const list = document.getElementById('selectedFiles');
+                    list.innerHTML = "<strong>Files to send:</strong><br>";
+                    if(input.files.length === 0) { list.innerText = "No files selected"; return; }
+                    for(let i=0; i<input.files.length; i++) {
+                        list.innerHTML += (i+1) + ". " + input.files[i].name + " (" + (input.files[i].size/1024).toFixed(1) + " KB)<br>";
+                    }
+                }
+
                 function sendText() {
                     const txt = document.getElementById('mobile_input').value;
+                    if(!txt) return;
                     fetch('/send_from_mobile?token={{token}}', {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify({text: txt})
-                    }).then(() => { alert('Sent!'); document.getElementById('mobile_input').value = ''; });
+                    }).then(() => { document.getElementById('mobile_input').value = ''; alert('Text sent to PC!'); });
                 }
 
                 setInterval(() => {
@@ -97,15 +109,23 @@ def upload():
     token = request.form.get('token')
     if token != ACCESS_TOKEN: abort(403)
     files = request.files.getlist('files')
+    if not files: return "No files selected", 400
+
     if permission_callback:
-        if not permission_callback(len(files), "Incoming Files"): return "Denied", 403
+        ts = 0
+        for f in files: f.seek(0, 2); ts += f.tell(); f.seek(0)
+        def fmt(s):
+            i = int(math.floor(math.log(s, 1024))) if s > 0 else 0
+            return f"{round(s/math.pow(1024,i),2)} {['B','KB','MB','GB'][i]}"
+        if not permission_callback(len(files), fmt(ts)): return "PC denied transfer", 403
+
     for file in files:
         if file.filename:
             fn = secure_filename(file.filename)
             path = os.path.join(UPLOAD_DIR, fn)
             file.save(path)
             if gui_callback: gui_callback(fn, os.path.getsize(path))
-    return "Files Received by PC!"
+    return render_template_string('<script>alert("Files uploaded successfully!"); window.location.href="/?token={{t}}";</script>', t=ACCESS_TOKEN)
 
 @app.route('/send_from_mobile', methods=['POST'])
 def send_from_mobile():
@@ -113,7 +133,7 @@ def send_from_mobile():
     if token != ACCESS_TOKEN: abort(403)
     data = request.get_json()
     if clip_callback and data.get('text'):
-        clip_callback(data['text']) # دي هتبعت النص لـ QTextEdit في الـ GUI
+        clip_callback(data['text'])
     return jsonify({"status": "ok"})
 
 @app.route('/download/<int:file_id>')
@@ -125,7 +145,7 @@ def download(file_id):
         resp = make_response(send_from_directory(os.path.dirname(p), os.path.basename(p)))
         resp.headers["Content-Disposition"] = f"attachment; filename={os.path.basename(p)}"
         return resp
-    return "File not found", 404
+    return "Not Found", 404
 
 @app.route('/get_clip')
 def get_clip():
