@@ -11,7 +11,7 @@ permission_callback = None
 
 app = Flask(__name__)
 # فولدر الاستلام النهائي
-UPLOAD_DIR = os.path.expanduser("~/Downloads/HelSync")
+UPLOAD_DIR = os.path.normpath(os.path.join(os.path.expanduser("~"), "Downloads", "HelSync"))
 # فولدر مؤقت للاستلام الفوري
 TEMP_DIR = os.path.join(UPLOAD_DIR, "temp")
 os.makedirs(TEMP_DIR, exist_ok=True)
@@ -155,15 +155,18 @@ def upload():
             total_size += size
 
     if permission_callback:
-        def fmt(s): return f"{round(s/1024/1024, 2)} MB"
+        def fmt(s): return f"{round(s/1024/1024, 2)} MB" if s > 1024*1024 else f"{round(s/1024, 2)} KB"
+        # استدعاء الصلاحية وانتظار الرد من الـ GUI
         if permission_callback(len(received_files), fmt(total_size)):
             for temp_path, fn, size in received_files:
                 final_path = os.path.join(UPLOAD_DIR, fn)
+                if os.path.exists(final_path): os.remove(final_path)
                 shutil.move(temp_path, final_path)
-                if gui_callback: gui_callback(fn, size)
+                if gui_callback: gui_callback(fn, size) # تحديث قائمة الواجهة
             return "OK"
         else:
-            for temp_path, _, _ in received_files: os.remove(temp_path)
+            for temp_path, _, _ in received_files: 
+                if os.path.exists(temp_path): os.remove(temp_path)
             return "PC Rejected", 403
     return "OK"
 
@@ -179,7 +182,6 @@ def send_from_mobile():
 def download(file_id):
     token = request.args.get('token')
     if token != ACCESS_TOKEN: abort(403)
-    # التأكد إن FILES_TO_SHARE فيها ملفات
     if 0 <= file_id < len(FILES_TO_SHARE):
         p = FILES_TO_SHARE[file_id]
         if os.path.exists(p):
