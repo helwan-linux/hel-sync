@@ -42,11 +42,25 @@ if __name__ == "__main__":
     ui.comm.text_received.connect(update_clipboard_ui)
 
     # 4. تفعيل زر START SENDING
+    # 4. تفعيل زر START SENDING
     def start_sharing_action_bridge():
         server.FILES_TO_SHARE = ui.pending_files
         server.ACCESS_TOKEN = token
-        ui.start_sending_action() # تشغيل الـ Worker اللي إنت كاتبه في الـ GUI
-        ui.tray_icon.showMessage("Hel-Sync", "Server is now sharing files!", 1)
+        
+        # --- السطر اللي كان ناقص عشان الموبايل يستلم ---
+        # ربط الـ out_clip بتاع الواجهة بـ CLIP_HISTORY بتاع السيرفر
+        def sync_to_server():
+            server.CLIP_HISTORY[token] = ui.out_clip.toPlainText()
+            
+        # جعل السيرفر يقرأ من الـ out_clip كل ما يتغير النص
+        ui.out_clip.textChanged.connect(sync_to_server)
+        # -----------------------------------------------
+        
+        ui.start_sending_action()
+        ui.tray_icon.showMessage("Hel-Sync", "Server is now sharing files & text!", 1)
+
+    ui.btn_send.clicked.disconnect()
+    ui.btn_send.clicked.connect(start_sharing_action_bridge)
 
     # فك أي ربط قديم وربط الزر بالدالة الجديدة
     ui.btn_send.clicked.disconnect()
