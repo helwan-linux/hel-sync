@@ -16,30 +16,45 @@ def get_ip():
     return ip
 
 if __name__ == "__main__":
-    # 1. تشغيل التطبيق
     app = QApplication(sys.argv)
-    app.setQuitOnLastWindowClosed(False) # لضمان استمرار البرنامج في الـ Tray
+    app.setQuitOnLastWindowClosed(False) 
     
-    # 2. إعداد بيانات الأمان والرابط
-    token = "auth_token_xyz" # التوكن الأمني
+    token = "auth_token_xyz" 
     ip_addr = get_ip()
     url = f"http://{ip_addr}:8080?token={token}"
 
-    # 3. تشغيل الواجهة
     ui = HelSyncGUI(url)
 
+    # --- [تعديل 1: ربط الاستلام بالأسماء الصحيحة في كود الـ 230 سطر] ---
+    def update_received_list_ui(filename, size):
+        # بننادي على الدالة اللي إنت كاتبها جوه الـ GUI أصلاً (add_received)
+        # لأنها بتحدث r_list اللي موجود فعلاً
+        ui.add_received(filename, size)
+
+    # ربط إشارة السيرفر بالدالة
+    ui.comm.file_received.connect(update_received_list_ui)
+    
+    # ربط إشارة النص المستلم (للكليب بورد) - الاسم عندك هو in_clip
+    def update_clipboard_ui(text):
+        ui.in_clip.setPlainText(text)
+        ui.tray_icon.showMessage("Hel-Sync", "New text received from mobile!", 1)
+            
+    ui.comm.text_received.connect(update_clipboard_ui)
+
     # 4. تفعيل زر START SENDING
-    def start_sharing_action():
+    def start_sharing_action_bridge():
         server.FILES_TO_SHARE = ui.pending_files
         server.ACCESS_TOKEN = token
-        ui.db_title.setText("Status: Sharing Live")
-        ui.btn_send.setEnabled(False)
+        ui.start_sending_action() # تشغيل الـ Worker اللي إنت كاتبه في الـ GUI
         ui.tray_icon.showMessage("Hel-Sync", "Server is now sharing files!", 1)
 
-    ui.btn_send.clicked.connect(start_sharing_action)
+    # فك أي ربط قديم وربط الزر بالدالة الجديدة
+    ui.btn_send.clicked.disconnect()
+    ui.btn_send.clicked.connect(start_sharing_action_bridge)
 
-    # 5. معالج الصلاحيات
+    # 5. معالج الصلاحيات (Thread-Safe)
     def perm_handler(count, size):
+        # بننادي إشارة تفتح الـ MessageBox من الـ Main Thread
         ui.comm.request_perm.emit(str(count), str(size))
         while not hasattr(ui, 'is_ok'):
             QApplication.processEvents()
@@ -48,17 +63,17 @@ if __name__ == "__main__":
         del ui.is_ok 
         return res
 
-    # 6. معالج العداد (Progress Handler) للربط مع الواجهة
-    def progress_handler(percent, filename, current, total):
-        # تحديث شريط العداد ونصوص الحالة في الواجهة
-        stats = f"Files: {current}/{total} | Receiving: {filename} | {int(percent)}%"
-        # ملاحظة: يجب إضافة دالة update_progress_ui في ملف app_window.py كما ذكرت سابقاً
-        # أو استخدام الإشارة مباشرة إذا قمت بتعريفها
-        if hasattr(ui, 'prog'):
-            ui.prog.setValue(int(percent))
-            ui.db_stats.setText(stats)
+    # ربط طلب الإذن بالدالة اللي بتحفظ الرد
+    def secure_ask(c, s):
+        ui.is_ok = ui.ask_perm(c, s)
+    ui.comm.request_perm.connect(secure_ask)
 
-    # 7. تشغيل السيرفر في Thread منفصل
+    # 6. معالج العداد (الاسم عندك هو prog)
+    def progress_handler(percent, filename, current, total):
+        ui.prog.setValue(int(percent))
+        ui.db_stats.setText(f"Receiving: {filename} ({int(percent)}%)")
+
+    # 7. تشغيل السيرفر
     t = threading.Thread(
         target=server.start_network_service, 
         args=(ui.comm.file_received.emit, ui.comm.text_received.emit, token, perm_handler, progress_handler), 
@@ -66,6 +81,5 @@ if __name__ == "__main__":
     )
     t.start()
 
-    # 8. إطلاق الواجهة
     ui.launch()
     sys.exit(app.exec_())
