@@ -1,0 +1,20 @@
+hel-sync/
+📁 hel-sync/
+├── 📁 assets
+│   └── 📄 icon.png
+├── 📄 hel-sync.desktop
+├── 📁 hel_sync_core
+│   ├── 📄 __init__.py
+│   ├── 📄 clipboard_manager.py
+│   ├── 📄 discovery_service.py
+│   ├── 📄 network_server.py
+│   └── 📄 security.py
+├── 📁 hel_sync_gui
+│   ├── 📄 __init__.py
+│   ├── 📄 app_window.py
+│   └── 📄 styles.py
+├── 📁 integration
+│   ├── 📄 __init__.py
+│   ├── 📄 firewall_config.py
+│   └── 📄 hel_context_menu.py
+└── 📄 main.py
