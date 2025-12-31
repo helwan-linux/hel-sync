@@ -6,4 +6,3 @@ Exec=hel-sync
 Icon=hel-sync
 Terminal=false
 Categories=Network;Utility;Qt;
-X-GNOME-Autostart-enabled=true
