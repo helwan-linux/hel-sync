@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Exec=python /path/to/your/hel-sync/main.pyw
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+Name=Hel-Sync
+Icon=/path/to/your/hel-sync/assets/icon.png
+Comment=Start Helwan Linux Sync Service
