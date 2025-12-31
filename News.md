@@ -1,4 +1,4 @@
-# Coming Soon: Hel-Sync Pro
+# Coming Soon: Hel-Sync
 
 Experience Seamless Connectivity with **Hel-Sync**.  
 We are thrilled to announce that Hel-Sync Pro is officially joining the **Helwan Linux** ecosystem. Bridge the gap between your PC and mobile devices like never before.
