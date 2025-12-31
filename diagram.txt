@@ -1,4 +1,4 @@
-hel-sync/
+https://github.com/helwan-linux/hel-sync
 📁 sync/
 ├── 📁 assets
 │   └── 📄 icon.png
@@ -19,3 +19,4 @@ hel-sync/
 │   └── 📄 hel_context_menu.py
 
 └── 📄 main.py
+
