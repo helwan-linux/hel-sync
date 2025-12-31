@@ -225,8 +225,38 @@ class HelSyncGUI(QWidget):
         if os.name == 'nt': os.startfile(p)
         else: subprocess.Popen(['xdg-open', p])
 
-    def show_help(self): QMessageBox.information(self, "HELP", "1. Add files.\n2. Click Start Sending.")
-    def show_about(self): QMessageBox.about(self, "ABOUT", "Hel-Sync Pro v3.6")
+    def show_help(self):
+        help_text = (
+            "🚀 Hel-Sync Pro - Quick Guide\n"
+            "------------------------------------------\n"
+            "1. CONNECTION:\n"
+            "   - Scan the QR Code using your phone's camera or browser.\n"
+            "   - Make sure both devices are on the same Wi-Fi.\n\n"
+            "2. SENDING TO MOBILE:\n"
+            "   - Drag & Drop or use 'ADD FILES' button.\n"
+            "   - Click 'START SENDING' to make files visible to your phone.\n\n"
+            "3. RECEIVING FROM MOBILE:\n"
+            "   - Use the web interface on your phone to upload files.\n"
+            "   - A permission request will pop up on your PC for safety.\n\n"
+            "4. CLIPBOARD SYNC:\n"
+            "   - Any text sent from mobile will appear in the dashboard instantly.\n\n"
+            "5. SMART BUZZ:\n"
+            "   - Use 'FIND MY MOBILE' if you can't find your phone; it will flash and speak!"
+        )
+        QMessageBox.information(self, "User Guide - Hel-Sync", help_text)
+
+    def show_about(self):
+        about_text = (
+            "Hel-Sync Pro v1.0\n"
+            "------------------------------------------\n"
+            "The Official Sync Tool for Helwan Linux\n\n"
+            "Developer: Saeed Badredlden\n"
+            "Distribution: Helwan Linux Project\n"
+            "Support: helwanlinux@gmail.com\n\n"
+            "Powered by Python, Flask & PyQt5\n"
+            "All rights reserved © 2025"
+        )
+        QMessageBox.about(self, "About Hel-Sync", about_text)
 
     def launch(self): 
         self.show()
