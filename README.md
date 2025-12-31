@@ -28,3 +28,50 @@ Hel-Sync is the official synchronization utility for **Helwan Linux**, designed 
 sudo pacman -S hel-sync
 # OR using Helwan Package Manager
 hpm i hel-sync
+
+From Source (Development):
+Clone the repository:
+
+Bash
+
+git clone [https://github.com/your-repo/hel-sync.git](https://github.com/your-repo/hel-sync.git)
+cd hel-sync
+Install dependencies:
+
+Bash
+
+pip install -r requirements.txt
+Run the application:
+
+Bash
+
+python main.py
+📖 How to Use
+Launch Hel-Sync: Open the app from your application menu or terminal.
+
+Connect: Scan the generated QR code with your smartphone.
+
+Share Files:
+
+To PC: Use the "Upload" button on the mobile dashboard.
+
+To Mobile: Drag files into the PC app and click "Start Sending".
+
+Clipboard: Type or paste text in the mobile "Sync Clipboard" area to send it to your PC.
+
+🛡️ Security & Privacy
+Hel-Sync is built with security in mind:
+
+No Cloud: Your files never leave your home/office network.
+
+Tokens: Every session is protected by a unique authentication token.
+
+Approval: You must manually approve any file sent from a mobile device.
+
+🤝 Contributing
+Contributions are welcome! If you have ideas for improvements or find any bugs, feel free to open an issue or submit a pull request.
+
+👨‍💻 Author
+Saeed Badredlden Lead Developer - Helwan Linux Community 📧 helwanlinux@gmail.com
+
+Part of the Helwan Linux Ecosystem. Built with ❤️ for the Open Source Community.
