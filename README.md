@@ -1,51 +1,30 @@
-🚀 Hel-Sync Pro
-The Ultimate Bridge between Arch Linux and your Mobile. Fast, Secure, and Bloat-free File & Clipboard Synchronization.
+# 🚀 Hel-Sync
+**Experience Seamless Connectivity Between Your PC and Mobile.**
 
-🌟 لماذا Hel-Sync؟
-في عالم "آرتش"، بنقدس البساطة والسرعة. Hel-Sync اتعمل عشان يحل أزمة نقل الملفات والنصوص بدون الحاجة لتثبيت تطبيقات ثقيلة (زي KDE Connect) وبدون تعقيدات الـ Pairing.
+Hel-Sync is the official synchronization utility for **Helwan Linux**, designed to bridge the gap between your desktop and mobile devices using a "Zero-App" philosophy. No mobile application is required—just scan, connect, and share.
 
-🛡️ ميزات "تخليك برنس" أمام المنافسين:
-Zero-App Architecture: مش محتاج تثبت حاجة على الموبايل. مسحة QR وكأنك ركبت كابل.
+![License](https://img.shields.io/badge/license-GPLv3-purple.svg)
+![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20Windows-blue.svg)
+![Python](https://img.shields.io/badge/python-3.8+-yellow.svg)
 
-Million-GB Ready: نظام Streaming ذكي بيستقبل أي حجم ملفات (ISO, 4K Video) بدون ما رامات الكمبيوتر تتحرك من مكانها.
+---
 
-Live Telemetry: عداد سرعة لحظي، حساب الوقت المتبقي (ETA)، وعداد بيانات مرفوعة (Uploaded/Total).
+## ✨ Key Features
 
-Clipboard Bridge: أي حاجة تعملها Copy على الكمبيوتر بتظهر فوراً على الموبايل، والعكس صحيح.
+- **📱 Zero-App Setup**: Connect instantly via your mobile web browser by scanning a QR code.
+- **📂 Bi-Directional Transfer**: Seamlessly send files to your mobile or receive uploads on your PC.
+- **🔒 Privacy First**: All data transfers happen strictly within your Local Area Network (LAN).
+- **🔔 Smart Buzz (Find My Mobile)**: Misplaced your phone? Trigger a visual and audio alert directly from your dashboard.
+- **📋 Live Clipboard**: Copy text on your mobile and see it appear instantly on your desktop.
+- **🛡️ Permission Handler**: Secure incoming transfers with a desktop confirmation dialog.
+- **⚙️ System Integration**: Minimize to tray for background operation.
 
-Security First: توكن أمني (Token) بيتولد من جديد مع كل تشغيل للبرنامج عشان يمنع المتسللين.
+---
 
-Wake Lock: تقنية بتجبر المتصفح يفضل شغال عشان النقل ما يقطعش لو الموبايل نام.
+## 🛠️ Installation
 
-🛠️ المتطلبات وتثبيت "العدة" (Arch Linux)
-افتح الترمينال واستخدم السكريبت اللي جهزناه، أو ثبت الأدوات دي:
-
-Bash
-
-sudo pacman -S python-pyqt5 python-flask python-qrcode python-pillow xclip wl-clipboard ufw
-🚀 طريقة التشغيل
-ادخل لمجلد المشروع.
-
-شغل البرنامج:
-
-Bash
-
-python main.pyw
-امسح الـ QR Code البنفسجي بموبايلك.. ومبروك عليك "الجسر" التقني.
-
-📊 واجهة التحكم (Dashboard)
-البرنامج بيعرض لك في الطرفين:
-
-على الكمبيوتر: قائمة حية بالملفات اللي وصلت فوراً.
-
-على الموبايل: لوحة تحكم كاملة فيها (السرعة، النسبة المئوية، الوقت المتبقي، وآخر نصوص تم نسخها).
-
-⚠️ نصائح للمحترفين
-لا تغلق المتصفح: لضمان استمرار النقل بسرعات الـ "جيجابت"، يفضل إبقاء شاشة الموبايل مفتوحة على صفحة الـ Gateway.
-
-الشبكة المحلية: تأكد إن الموبايل والكمبيوتر على نفس الواي فاي (أو Hotspot).
-
-كليك يمين: تقدر تبعت أي ملف من الكمبيوتر للموبايل بلمسة واحدة عن طريق قائمة النظام.
-
-🤝 المساهمة
-المشروع ده ابن "حلوان لينكس"، ومفتوح لأي حد حابب يطور فيه أو يضيف ميزات جديدة.
+### On Helwan Linux / Arch Linux:
+```bash
+sudo pacman -S hel-sync
+# OR using Helwan Package Manager
+hpm i hel-sync
