@@ -13,28 +13,32 @@ source=("git+https://github.com/helwan-linux/hel-sync.git")
 md5sums=('SKIP')
 
 package() {
-    cd "$srcdir/$pkgname/sync"
+    cd "$srcdir/hel-sync/sync"
 
-    # 1. إنشاء المسارات الهيكلية
+    # إنشاء المسارات
     install -dm755 "$pkgdir/usr/share/hel-sync"
     install -dm755 "$pkgdir/usr/bin"
     install -dm755 "$pkgdir/usr/share/applications"
     install -dm755 "$pkgdir/usr/share/icons/hicolor/48x48/apps"
 
-    # 2. نسخ كافة المجلدات البرمجية بناءً على الهيكلة الجديدة
-    cp -r assets hel_sync_core hel_sync_gui integration main.py "$pkgdir/usr/share/hel-sync/"
+    # نسخ التطبيق
+    cp -r assets hel_sync_core hel_sync_gui integration main.py \
+        "$pkgdir/usr/share/hel-sync/"
 
-    # 3. تثبيت ملف الديسك توب والأيقونة
-    install -m644 hel-sync.desktop "$pkgdir/usr/share/applications/"
-    install -m644 assets/icon.png "$pkgdir/usr/share/icons/hicolor/48x48/apps/hel-sync.png"
+    # Desktop entry
+    install -m644 hel-sync.desktop \
+        "$pkgdir/usr/share/applications/"
 
-    # 4. سكريبت التشغيل مع معالجة الـ Working Directory
-    cat <<EOF > "$pkgdir/usr/bin/hel-sync"
+    # Icon
+    install -m644 assets/icon.png \
+        "$pkgdir/usr/share/icons/hicolor/48x48/apps/hel-sync.png"
+
+    # Launcher
+    cat <<'EOF' > "$pkgdir/usr/bin/hel-sync"
 #!/bin/bash
-# الانتقال للمسار لضمان عمل الـ imports والـ assets
-cd /usr/share/hel-sync
-python main.py "\$@"
+cd /usr/share/hel-sync || exit 1
+exec python main.py "$@"
 EOF
-    
+
     chmod +x "$pkgdir/usr/bin/hel-sync"
 }
