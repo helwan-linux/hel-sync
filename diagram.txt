@@ -1,5 +1,5 @@
 hel-sync/
-📁 hel-sync/
+📁 sync/
 ├── 📁 assets
 │   └── 📄 icon.png
 ├── 📄 hel-sync.desktop
@@ -17,4 +17,5 @@ hel-sync/
 │   ├── 📄 __init__.py
 │   ├── 📄 firewall_config.py
 │   └── 📄 hel_context_menu.py
+
 └── 📄 main.py
