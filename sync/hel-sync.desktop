@@ -1,12 +1,10 @@
 [Desktop Entry]
+Type=Application
 Name=Hel-Sync
-Comment=Connect your mobile to PC seamlessly
-# تأكد أن اسم الملف التنفيذي في /usr/bin هو hel-sync
+Comment=Connect your mobile to PC seamlessly (Helwan Linux)
 Exec=hel-sync
-# تأكد من وضع الأيقونة في /usr/share/icons
 Icon=hel-sync
 Terminal=false
-Type=Application
 Categories=Network;Utility;Qt;
 StartupNotify=false
 X-GNOME-Autostart-enabled=true
