@@ -45,19 +45,7 @@ OR using Helwan Package Manager:
 
 hpm i hel-sync  
 
----
 
-### From Source (Development)
-
-Clone the repository:  
-git clone https://github.com/your-repo/hel-sync.git  
-cd hel-sync  
-
-Install dependencies:  
-pip install -r requirements.txt  
-
-Run the application:  
-python main.py  
 
 ---
 
