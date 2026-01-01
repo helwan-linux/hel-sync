@@ -225,8 +225,8 @@ class HelSyncGUI(QWidget):
         if os.name == 'nt': os.startfile(p)
         else: subprocess.Popen(['xdg-open', p])
 
-    def show_help(self): QMessageBox.information(self, "HELP", "1. Add files.\n2. Click Start Sending.")
-    def show_about(self): QMessageBox.about(self, "ABOUT", "Hel-Sync Pro v3.6")
+    def show_help(self): QMessageBox.information(self, "HELP", "1. Scan QR Code with mobile 2. Add files.\n3. Click Start Sending.")
+    def show_about(self): QMessageBox.about(self, "ABOUT", "Hel-Sync v1.0 \nHelwan Linux Distro \nhelwanlinux@gmail.com\nAuthor : Saeed Badelden")
 
     def launch(self): 
         self.show()
