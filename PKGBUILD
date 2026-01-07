@@ -1,7 +1,7 @@
 # Maintainer: Saeed Badredlden <helwanlinux@gmail.com>
 pkgname=hel-sync
-pkgver=1.0.0
-pkgrel=1
+pkgver=1.1.0
+pkgrel=2
 pkgdesc="Official synchronization utility for Helwan Linux - Zero-App philosophy."
 arch=('any')
 url="https://github.com/helwan-linux/hel-sync"
