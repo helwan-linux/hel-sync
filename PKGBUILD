@@ -14,10 +14,13 @@ depends=(
     'python-qrcode' 
     'python-pillow' 
     'python-pyautogui'
-    'python-cryptography' # المكتبة المطلوبة لحل هذا الخطأ
-    'python-pyopenssl'     # لضمان استقرار تشفير SSL
+    'python-cryptography'
+    'python-pyopenssl'
     'libxtest' 
     'libnotify'
+    'pulseaudio-utils'       # ضروري جداً للتحكم بالصوت (pactl)
+    'sound-theme-freedesktop' # لضمان وجود أصوات التنبيه
+    'ydotool'                # للتحكم بالماوس في بيئة Wayland
 )
 makedepends=('git')
 source=("git+https://github.com/helwan-linux/hel-sync.git")
