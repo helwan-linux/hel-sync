@@ -120,66 +120,109 @@ def index():
 
 				// --- التحكم بالماوس ---
 				const pad = document.getElementById('touchpad');
-				pad.addEventListener('touchstart', e => { lastX = e.touches[0].clientX; lastY = e.touches[0].clientY; });
+				let lastX = 0, lastY = 0;
+				let pendingX = 0, pendingY = 0;
+				let canSend = true;
+
+				const pad = document.getElementById('touchpad');
+
+				pad.addEventListener('touchstart', e => {
+					lastX = e.touches[0].clientX;
+					lastY = e.touches[0].clientY;
+					pendingX = 0;
+					pendingY = 0;
+				});
+
 				pad.addEventListener('touchmove', e => {
 					e.preventDefault();
-					let dx = Math.round((e.touches[0].clientX - lastX) * 1.8);
-					let dy = Math.round((e.touches[0].clientY - lastY) * 1.8);
-					if (Math.abs(dx) > 0 || Math.abs(dy) > 0) {
-						fetch(`/mouse_move?token=${TOKEN}&x=${dx}&y=${dy}`);
-						lastX = e.touches[0].clientX; lastY = e.touches[0].clientY;
+					
+					// حساب الفرق وتراكمه (الحساسية أصبحت 2.5 للسرعة)
+					pendingX += (e.touches[0].clientX - lastX) * 2.5;
+					pendingY += (e.touches[0].clientY - lastY) * 2.5;
+					
+					lastX = e.touches[0].clientX;
+					lastY = e.touches[0].clientY;
+
+					// إذا كان الطريق مفتوحاً للإرسال (توفير جهد الشبكة)
+					if (canSend && (Math.abs(pendingX) > 1 || Math.abs(pendingY) > 1)) {
+						const x = Math.round(pendingX);
+						const y = Math.round(pendingY);
+						
+						// تصفير المتركمات فوراً قبل الإرسال
+						pendingX = 0;
+						pendingY = 0;
+						canSend = false;
+
+						// إرسال الطلب مع إضافة t لمنع التخزين المؤقت
+						fetch(`/mouse_move?token=${TOKEN}&x=${x}&y=${y}&t=${Date.now()}`)
+							.then(() => {
+								// السماح بالإرسال مرة أخرى بعد 10 مللي ثانية فقط (سرعة البرق)
+								setTimeout(() => { canSend = true; }, 10);
+							})
+							.catch(() => { canSend = true; });
 					}
-				}, {passive: false});
+				}, { passive: false });
 
 				function mouseBtn(type) { fetch(`/mouse_click?token=${TOKEN}&btn=${type}`); }
 				function doCmd(a) { fetch(`/remote_cmd?token=${TOKEN}&action=${a}`); }
 
 				// --- وظائف الصوت والوميض للموبايل (Buzz) ---
-function startBuzz() {
-    if(isBuzzing) return; 
-    isBuzzing = true;
-    
-    // 1. الاهتزاز بنمط التنبيه
-    if(navigator.vibrate) navigator.vibrate([500, 200, 500, 200, 500, 200, 1000]);
+				function startBuzz() {
+					if(isBuzzing) return; 
+					isBuzzing = true;
+					
+					// 1. الاهتزاز بنمط طويل
+					if(navigator.vibrate) navigator.vibrate([500, 200, 500, 200, 500, 200, 1000, 500, 1000]);
 
-    // 2. نطق الجملة أولاً
-    let m = new SpeechSynthesisUtterance("I am here!");
-    window.speechSynthesis.speak(m);
+					// 2. نطق الجملة 3 مرات متتالية (للتكرار)
+					for(let i=0; i<3; i++) {
+						let m = new SpeechSynthesisUtterance("I am here!");
+						m.rate = 0.8; // أبطأ قليلاً ليكون أوضح
+						window.speechSynthesis.speak(m);
+					}
 
-    // 3. "الصرخة" أو الصافرة (تبدأ فوراً بعد الكلام)
-    m.onend = function() {
-        if(!isBuzzing) return;
-        
-        let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        let oscillator = audioCtx.createOscillator();
-        let gainNode = audioCtx.createGain();
+					// 3. "الصرخة" (صافرة إنذار حادة) - ستعمل مع الكلام في نفس الوقت
+					let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+					let oscillator = audioCtx.createOscillator();
+					let gainNode = audioCtx.createGain();
 
-        oscillator.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
+					oscillator.connect(gainNode);
+					gainNode.connect(audioCtx.destination);
 
-        // نوع الموجة 'sawtooth' يعطي صوتاً حاداً يشبه الصرخة أو المنبه
-        oscillator.type = 'sawtooth'; 
-        
-        // تغيير التردد صعوداً وهبوطاً لمحاكاة صوت السرينة (Siren)
-        oscillator.frequency.setValueAtTime(440, audioCtx.currentTime);
-        oscillator.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.5);
-        oscillator.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 1);
-        
-        oscillator.loop = true;
-        oscillator.start();
+					oscillator.type = 'sawtooth'; // صوت حاد جداً ومزعج
+					oscillator.frequency.setValueAtTime(800, audioCtx.currentTime); 
+					
+					// جعل التردد يتأرجح (صوت سرينة الإسعاف)
+					oscillator.frequency.linearRampToValueAtTime(1500, audioCtx.currentTime + 0.5);
+					oscillator.frequency.linearRampToValueAtTime(800, audioCtx.currentTime + 1);
+					
+					// تكرار التأرجح
+					let intervalSiren = setInterval(() => {
+						if(!isBuzzing) {
+							oscillator.stop();
+							clearInterval(intervalSiren);
+							return;
+						}
+						oscillator.frequency.linearRampToValueAtTime(1500, audioCtx.currentTime + 0.5);
+						oscillator.frequency.linearRampToValueAtTime(800, audioCtx.currentTime + 1);
+					}, 1000);
 
-        // اجعلها تصرخ لمدة 5 ثوانٍ ثم تتوقف
-        setTimeout(() => {
-            oscillator.stop();
-            audioCtx.close();
-        }, 5000);
-    };
+					oscillator.start();
 
-    // 4. الوميض البصري (أحمر وأبيض)
-    flashInterval = setInterval(() => {
-        document.body.style.backgroundColor = (document.body.style.backgroundColor==='red')?'white':'red';
-    }, 150);
-}
+					// 4. الوميض (أبيض وأحمر)
+					flashInterval = setInterval(() => {
+						document.body.style.backgroundColor = (document.body.style.backgroundColor==='red')?'white':'red';
+					}, 150);
+
+					// توقف الصراخ تلقائياً بعد 8 ثوانٍ
+					setTimeout(() => { 
+						isBuzzing = false;
+						oscillator.stop();
+						audioCtx.close();
+						clearInterval(intervalSiren);
+						stopBuzz(); 
+					}, 8000);
+				}
 				function stopBuzz() { 
 					isBuzzing = false; clearInterval(flashInterval); 
 					document.body.style.backgroundColor = '#0c0c0c'; 
@@ -251,16 +294,20 @@ function startBuzz() {
 # --- مسارات التحكم في الماوس ---
 @app.route('/mouse_move')
 def mouse_move():
-    token = request.args.get('token')
-    if token != ACCESS_TOKEN: abort(403)
+    # التحقق السريع من التوكن
+    if request.args.get('token') != ACCESS_TOKEN: abort(403)
+    
     try:
-        dx = int(request.args.get('x', 0))
-        dy = int(request.args.get('y', 0))
-        # الحركة هنا مع التأكد من عدم وجود تأخير
-        pyautogui.moveRel(dx, dy, _pause=False)
+        x = request.args.get('x', 0)
+        y = request.args.get('y', 0)
+        
+        # استخدام xdotool بدلاً من pyautogui لسرعة خرافية
+        # أمر mousemove_relative يحرك الماوس بالنسبة لمكانه الحالي فوراً
+        os.system(f"xdotool mousemove_relative -- {x} {y}")
     except:
         pass
-    return "ok"
+        
+    return "", 204 # رد "بدون محتوى" لإنهاء الطلب في ميكروثانية
 
 @app.route('/mouse_click')
 def mouse_click():
