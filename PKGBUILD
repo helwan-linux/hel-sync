@@ -16,11 +16,12 @@ depends=(
     'python-pyautogui'
     'python-cryptography'
     'python-pyopenssl'
+    'xdotool'                 # <<< ضروري جداً للسرعة التي طلبناها في X11/Cinnamon
     'libxtest' 
     'libnotify'
-    'pulseaudio-utils'       # ضروري جداً للتحكم بالصوت (pactl)
+    'pulseaudio-utils'        # للتحكم بالصوت عبر pactl/paplay
     'sound-theme-freedesktop' # لضمان وجود أصوات التنبيه
-    'ydotool'                # للتحكم بالماوس في بيئة Wayland
+    'libcanberra'             # مهم جداً لأمر canberra-gtk-play الذي استخدمناه للرنين
 )
 makedepends=('git')
 source=("git+https://github.com/helwan-linux/hel-sync.git")
