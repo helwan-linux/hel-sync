@@ -7,7 +7,18 @@ arch=('any')
 url="https://github.com/helwan-linux/hel-sync"
 license=('GPL3')
 # الاعتماديات الحقيقية بناءً على الكود المصدري
-depends=('python' 'python-pyqt5' 'python-flask' 'python-qrcode' 'python-pillow' 'python-pyautogui')
+depends=(
+    'python' 
+    'python-pyqt5' 
+    'python-flask' 
+    'python-qrcode' 
+    'python-pillow' 
+    'python-pyautogui'
+    'python-cryptography' # المكتبة المطلوبة لحل هذا الخطأ
+    'python-pyopenssl'     # لضمان استقرار تشفير SSL
+    'libxtest' 
+    'libnotify'
+)
 makedepends=('git')
 source=("git+https://github.com/helwan-linux/hel-sync.git")
 md5sums=('SKIP')
