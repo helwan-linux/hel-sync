@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Hel-Sync
+Comment=Connect your mobile to PC seamlessly
+Exec=hel-sync
+Icon=hel-sync
+Terminal=false
+Categories=Network;Utility;Qt;
