@@ -120,11 +120,11 @@ def index():
 
 				// --- التحكم بالماوس ---
 				const pad = document.getElementById('touchpad');
-				let lastX = 0, lastY = 0;
+				
 				let pendingX = 0, pendingY = 0;
 				let canSend = true;
 
-				const pad = document.getElementById('touchpad');
+				
 
 				pad.addEventListener('touchstart', e => {
 					lastX = e.touches[0].clientX;
