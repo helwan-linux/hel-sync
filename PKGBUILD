@@ -16,12 +16,11 @@ depends=(
     'python-pyautogui'
     'python-cryptography'
     'python-pyopenssl'
-    'xdotool'                 # <<< ضروري جداً للسرعة التي طلبناها في X11/Cinnamon
-    'libxtest' 
+    'xdotool'
+    'libxtst'                 # تم التصحيح من libxtest
     'libnotify'
-    'pulseaudio-utils'        # للتحكم بالصوت عبر pactl/paplay
-    'sound-theme-freedesktop' # لضمان وجود أصوات التنبيه
-    'libcanberra'             # مهم جداً لأمر canberra-gtk-play الذي استخدمناه للرنين
+    'libcanberra'             # بديل أفضل وأخف لـ pulseaudio-utils
+    'sound-theme-freedesktop'
 )
 makedepends=('git')
 source=("git+https://github.com/helwan-linux/hel-sync.git")
@@ -30,30 +29,22 @@ md5sums=('SKIP')
 package() {
     cd "$srcdir/hel-sync/sync"
 
-    # إنشاء المسارات
-    install -dm755 "$pkgdir/usr/share/hel-sync"
+    # 1. إنشاء مجلد واحد في الـ opt (ده اللي بيحل مشاكل المسارات في آرش)
+    install -dm755 "$pkgdir/opt/hel-sync"
+    cp -r * "$pkgdir/opt/hel-sync/"
+
+    # 2. إنشاء الـ Launcher اللي بيشغل البرنامج من مكانه الجديد
     install -dm755 "$pkgdir/usr/bin"
-    install -dm755 "$pkgdir/usr/share/applications"
-    install -dm755 "$pkgdir/usr/share/icons/hicolor/48x48/apps"
-
-    # نسخ التطبيق
-    cp -r assets hel_sync_core hel_sync_gui integration main.py \
-        "$pkgdir/usr/share/hel-sync/"
-
-    # Desktop entry
-    install -m644 hel-sync.desktop \
-        "$pkgdir/usr/share/applications/"
-
-    # Icon
-    install -m644 assets/icon.png \
-        "$pkgdir/usr/share/icons/hicolor/48x48/apps/hel-sync.png"
-
-    # Launcher
     cat <<'EOF' > "$pkgdir/usr/bin/hel-sync"
 #!/bin/bash
-cd /usr/share/hel-sync || exit 1
-exec python main.py "$@"
+export DISPLAY=:0
+export XAUTHORITY=$HOME/.Xauthority
+cd /opt/hel-sync && python main.py "$@"
 EOF
 
     chmod +x "$pkgdir/usr/bin/hel-sync"
+
+    # 3. الأيقونة والـ Desktop Entry
+    install -dm755 "$pkgdir/usr/share/applications"
+    install -m644 hel-sync.desktop "$pkgdir/usr/share/applications/"
 }
