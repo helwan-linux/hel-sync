@@ -88,6 +88,7 @@ def index():
 					<button onclick="doCmd('mute')" style="background:#dc3545;">🔇 Mute</button>
 					<button onclick="doCmd('buzz_pc')" style="background:#ffc107; color:black;">🔔 Buzz PC</button>
 					<button onclick="doCmd('lock')" style="background:#6c757d; grid-column: span 2;">🔒 Lock PC</button>
+					<button onclick="doCmd('playpause')" style="background:#28a745; grid-column: span 2; margin-bottom: 5px;">⏯️ Play / Pause</button>
 				</div>
 			</div>
 
@@ -294,34 +295,34 @@ def index():
 # --- مسارات التحكم في الماوس ---
 @app.route('/mouse_move')
 def mouse_move():
-    # التحقق السريع من التوكن
-    if request.args.get('token') != ACCESS_TOKEN: abort(403)
-    
-    try:
-        x = request.args.get('x', 0)
-        y = request.args.get('y', 0)
-        
-        # استخدام xdotool بدلاً من pyautogui لسرعة خرافية
-        # أمر mousemove_relative يحرك الماوس بالنسبة لمكانه الحالي فوراً
-        os.system(f"xdotool mousemove_relative -- {x} {y}")
-    except:
-        pass
-        
-    return "", 204 # رد "بدون محتوى" لإنهاء الطلب في ميكروثانية
+	# التحقق السريع من التوكن
+	if request.args.get('token') != ACCESS_TOKEN: abort(403)
+	
+	try:
+		x = request.args.get('x', 0)
+		y = request.args.get('y', 0)
+		
+		# استخدام xdotool بدلاً من pyautogui لسرعة خرافية
+		# أمر mousemove_relative يحرك الماوس بالنسبة لمكانه الحالي فوراً
+		os.system(f"xdotool mousemove_relative -- {x} {y}")
+	except:
+		pass
+		
+	return "", 204 # رد "بدون محتوى" لإنهاء الطلب في ميكروثانية
 
 @app.route('/mouse_click')
 def mouse_click():
-    token = request.args.get('token')
-    if token != ACCESS_TOKEN: abort(403)
-    btn = request.args.get('btn', 'left')
-    try:
-        if btn == 'left':
-            pyautogui.click(_pause=False)
-        else:
-            pyautogui.rightClick(_pause=False)
-    except:
-        pass
-    return "ok"
+	token = request.args.get('token')
+	if token != ACCESS_TOKEN: abort(403)
+	btn = request.args.get('btn', 'left')
+	try:
+		if btn == 'left':
+			pyautogui.click(_pause=False)
+		else:
+			pyautogui.rightClick(_pause=False)
+	except:
+		pass
+	return "ok"
 
 # --- مسارات الأوامر والملفات ---
 # 1. في دالة remote_cmd للإصلاح الشامل
@@ -332,21 +333,29 @@ def remote_cmd():
     action = request.args.get('action') 
     system = platform.system()
 
-    # التحكم في الصوت
-    if action in ("volup", "voldown", "mute"):
+    # التحكم في الصوت والميديا
+    if action in ("volup", "voldown", "mute", "playpause"):
         if system == "Windows":
-            pyautogui.press("volumeup" if action == "volup" else "volumedown" if action == "voldown" else "volumemute")
+            if action == "playpause":
+                pyautogui.press("playpause")
+            else:
+                pyautogui.press("volumeup" if action == "volup" else "volumedown" if action == "voldown" else "volumemute")
+        
         elif system == "Linux":
-            if action == "volup": subprocess.run(["pactl", "set-sink-volume", "@DEFAULT_SINK@", "+5%"])
-            elif action == "voldown": subprocess.run(["pactl", "set-sink-volume", "@DEFAULT_SINK@", "-5%"])
-            else: subprocess.run(["pactl", "set-sink-mute", "@DEFAULT_SINK@", "toggle"])
+            if action == "volup": 
+                subprocess.run(["pactl", "set-sink-volume", "@DEFAULT_SINK@", "+5%"])
+            elif action == "voldown": 
+                subprocess.run(["pactl", "set-sink-volume", "@DEFAULT_SINK@", "-5%"])
+            elif action == "mute": 
+                subprocess.run(["pactl", "set-sink-mute", "@DEFAULT_SINK@", "toggle"])
+            elif action == "playpause":
+                os.system("playerctl play-pause 2>/dev/null || xdotool key XF86AudioPlay 2>/dev/null")
 
-    # قفل الشاشة - شامل لكل بيئات لينكس و ويندوز
+    # قفل الشاشة
     elif action == "lock":
         if system == "Windows":
             subprocess.run(["rundll32.exe", "user32.dll,LockWorkStation"])
         elif system == "Linux":
-            # تسلسل أوامر يغطي Cinnamon, Gnome, KDE, XFCE والمزيد
             os.system(
                 "cinnamon-screensaver-command --lock || "
                 "loginctl lock-session || "
@@ -361,9 +370,9 @@ def remote_cmd():
             winsound.Beep(1000, 400)
         elif system == "Linux":
             os.system("notify-send '🔔 Hel-Sync' 'Buzzing from Mobile!'")
-            os.system("paplay /usr/share/sounds/freedesktop/stereo/complete.oga || echo -e '\a'")
+            os.system("paplay /usr/share/sounds/freedesktop/stereo/complete.oga 2>/dev/null || echo -e '\a'")
 
-    return jsonify({"status": "ok"}) 
+    return jsonify({"status": "ok"})
 
 @app.route('/get_files')
 def get_files():
