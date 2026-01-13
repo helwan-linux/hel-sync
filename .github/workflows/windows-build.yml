@@ -22,14 +22,22 @@ jobs:
         python -m pip install --upgrade pip
         pip install flask pyqt5 qrcode pillow pyautogui cryptography pyopenssl pyinstaller pynput
 
-    - name: Build Single Executable with PyInstaller
+    - name: Convert PNG to ICO
+      shell: python
       run: |
-        # تم تغيير --onedir إلى --onefile لدمج كل شيء في ملف exe واحد
-        pyinstaller --onefile --windowed --name hel-sync sync/main.py
+        from PIL import Image
+        import os
+        # فتح ملف الـ PNG وتحويله إلى ICO
+        img = Image.open("sync/assets/icon.png")
+        img.save("icon.ico", format='ICO', sizes=[(256, 256), (128, 128), (64, 64), (32, 32)])
+
+    - name: Build Single Executable with Icon
+      run: |
+        # نستخدم الملف الجديد icon.ico الذي تم إنتاجه في الخطوة السابقة
+        pyinstaller --onefile --windowed --icon=icon.ico --name hel-sync sync/main.py
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
         name: hel-sync-windows-exe
-        # المسار الآن يشير مباشرة للملف الناتج داخل مجلد dist
         path: dist/hel-sync.exe
