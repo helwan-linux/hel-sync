@@ -1,4 +1,4 @@
-name: Build Hel-Sync EXE
+name: Build Hel-Sync Package
 
 on:
   push:
@@ -22,12 +22,16 @@ jobs:
         python -m pip install --upgrade pip
         pip install flask pyqt5 qrcode pillow pyautogui cryptography pyopenssl pyinstaller pynput
 
-    - name: Build EXE with PyInstaller
+    - name: Build Directory with PyInstaller
       run: |
-        pyinstaller --onefile --windowed --name hel-sync sync/main.py
+        pyinstaller --onedir --windowed --name hel-sync sync/main.py
+
+    - name: Compress Directory to ZIP
+      run: |
+        powershell Compress-Archive -Path dist/hel-sync/* -DestinationPath dist/hel-sync-windows.zip
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: hel-sync-windows-exe
-        path: dist/hel-sync.exe
+        name: hel-sync-windows-zip
+        path: dist/hel-sync-windows.zip
