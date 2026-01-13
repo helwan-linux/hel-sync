@@ -22,16 +22,14 @@ jobs:
         python -m pip install --upgrade pip
         pip install flask pyqt5 qrcode pillow pyautogui cryptography pyopenssl pyinstaller pynput
 
-    - name: Build Directory with PyInstaller
+    - name: Build Single Executable with PyInstaller
       run: |
-        pyinstaller --onedir --windowed --name hel-sync sync/main.py
-
-    - name: Compress Directory to ZIP
-      run: |
-        powershell Compress-Archive -Path dist/hel-sync/* -DestinationPath dist/hel-sync-windows.zip
+        # تم تغيير --onedir إلى --onefile لدمج كل شيء في ملف exe واحد
+        pyinstaller --onefile --windowed --name hel-sync sync/main.py
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: hel-sync-windows-zip
-        path: dist/hel-sync-windows.zip
+        name: hel-sync-windows-exe
+        # المسار الآن يشير مباشرة للملف الناتج داخل مجلد dist
+        path: dist/hel-sync.exe
