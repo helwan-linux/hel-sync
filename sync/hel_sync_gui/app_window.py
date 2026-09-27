@@ -248,7 +248,7 @@ class HelSyncGUI(QWidget):
 			<li><b>Control Panel:</b> You can control the mouse, volume, and lock the screen directly from your mobile browser.</li>
 			<li><b>Phone Alert:</b> If you lose your phone in the room, click 🔔 BUZZ PHONE to make it ring and vibrate.</li>
 			<li><b>Devices other than the mobile:</b> Through this address <br>
-				<code style='color: #00bcd4; background: #222; padding: 2px 4px; border-radius: 4px;'>http://&lt;your-pc-ip&gt;:8080/?token=auth_token_xyz</code>
+				<code style='color: #00bcd4; background: #222; padding: 2px 4px; border-radius: 4px;'>http://&lt;http://127.0.0.1&gt;:8080/?token=auth_token_xyz</code>
 			</li>
 		</ol>
 		<p style='color: #888;'><i>Note: Ensure both the devices and PC are on the same Wi-Fi network.</i></p>
