@@ -241,21 +241,28 @@ class HelSyncGUI(QWidget):
 	def show_help(self):
 		help_text = """
 		<h2 style='color: #a349a4;'>🚀 How to use Hel-Sync?</h2>
-		<ol style='line-height: 1.6;'>
+		<ol style='line-height: 1.8;'>
 			<li><b>Connection:</b> Click the 🔗 QR CODE button and scan it with your phone's camera.</li>
 			<li><b>Send from PC:</b> Add your files via 📁 ADD FILES, then check your phone—they will be ready for download.</li>
 			<li><b>Send from Mobile:</b> Select files on the mobile page and click Upload; they will appear instantly in the RECEIVED list here.</li>
 			<li><b>Control Panel:</b> You can control the mouse, volume, and lock the screen directly from your mobile browser.</li>
 			<li><b>Phone Alert:</b> If you lose your phone in the room, click 🔔 BUZZ PHONE to make it ring and vibrate.</li>
+			<li><b>Devices other than the mobile:</b> Through this address <br>
+				<code style='color: #00bcd4; background: #222; padding: 2px 4px; border-radius: 4px;'>http://&lt;your-pc-ip&gt;:8080/?token=auth_token_xyz</code>
+			</li>
 		</ol>
-		<p style='color: #888;'><i>Note: Ensure both the mobile and PC are on the same Wi-Fi network.</i></p>
+		<p style='color: #888;'><i>Note: Ensure both the devices and PC are on the same Wi-Fi network.</i></p>
 		"""
-		msg = QMessageBox(self)
-		msg.setWindowTitle("User Guide")
-		msg.setTextFormat(Qt.RichText)
-		msg.setText(help_text)
-		msg.setStyleSheet("QLabel{min-width: 400px;}")
-		msg.exec_()
+		
+		# استخدام QDialog بدلاً من QMessageBox لضمان التحكم الكامل في الحجم والعرض
+		dialog = QMessageBox(self)
+		dialog.setWindowTitle("User Guide")
+		dialog.setTextFormat(Qt.RichText)
+		dialog.setText(help_text)
+		
+		# زيادة العرض المينيمم لمنع قص النصوص وجعلها مريحة للعين
+		dialog.setStyleSheet("QLabel{min-width: 600px; max-width: 700px; font-size: 13px;}")
+		dialog.exec_()
 		
 	
 	def show_about(self):
