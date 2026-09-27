@@ -1,12 +1,13 @@
 import os, math, subprocess, time
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QPushButton, QLabel, QListWidget, 
 							 QHBoxLayout, QTextEdit, QFileDialog, QApplication, QMessageBox, 
-							 QProgressBar, QFrame, QSystemTrayIcon, QMenu, QStyle)
+							 QProgressBar, QFrame, QSystemTrayIcon, QMenu, QStyle,QDialog, QTextBrowser)
 from PyQt5.QtCore import Qt, pyqtSignal, QObject, QTimer, QThread
 from PyQt5.QtGui import QPixmap, QIcon
 import qrcode
 from io import BytesIO
 
+	
 # الربط مع ملف السيرفر للتحكم في البيانات الحقيقية
 from hel_sync_core import network_server as srv
 
@@ -238,8 +239,10 @@ class HelSyncGUI(QWidget):
 		if os.name == 'nt': os.startfile(p)
 		else: subprocess.Popen(['xdg-open', p])
 
+
+
 	def show_help(self):
-		help_text = """
+	  help_text = """
 		<h2 style='color: #a349a4;'>🚀 How to use Hel-Sync?</h2>
 		<ol style='line-height: 1.8;'>
 			<li><b>Connection:</b> Click the 🔗 QR CODE button and scan it with your phone's camera.</li>
@@ -248,21 +251,33 @@ class HelSyncGUI(QWidget):
 			<li><b>Control Panel:</b> You can control the mouse, volume, and lock the screen directly from your mobile browser.</li>
 			<li><b>Phone Alert:</b> If you lose your phone in the room, click 🔔 BUZZ PHONE to make it ring and vibrate.</li>
 			<li><b>Devices other than the mobile:</b> Through this address <br>
-				<code style='color: #00bcd4; background: #222; padding: 2px 4px; border-radius: 4px;'>http://&lt;http://127.0.0.1&gt;:8080/?token=auth_token_xyz</code>
+				<code style='color: #00bcd4; background: #222; padding: 2px 4px; border-radius: 4px;'>http://127.0.0.1:8080/?token=auth_token_xyz</code>
 			</li>
 		</ol>
 		<p style='color: #888;'><i>Note: Ensure both the devices and PC are on the same Wi-Fi network.</i></p>
 		"""
-		
-		# استخدام QDialog بدلاً من QMessageBox لضمان التحكم الكامل في الحجم والعرض
-		dialog = QMessageBox(self)
-		dialog.setWindowTitle("User Guide")
-		dialog.setTextFormat(Qt.RichText)
-		dialog.setText(help_text)
-		
-		# زيادة العرض المينيمم لمنع قص النصوص وجعلها مريحة للعين
-		dialog.setStyleSheet("QLabel{min-width: 600px; max-width: 700px; font-size: 13px;}")
-		dialog.exec_()
+
+	  # إنشاء نافذة حوار مخصصة QDialog
+	  dialog = QDialog(self)
+	  dialog.setWindowTitle("User Guide")
+	  dialog.resize(650, 450)
+
+	  layout = QVBoxLayout(dialog)
+
+	  # استخدام QTextBrowser لدعم HTML والسماح بتحديد النصوص ونسخها
+	  text_browser = QTextBrowser(dialog)
+	  text_browser.setHtml(help_text)
+	  text_browser.setOpenExternalLinks(
+		  True
+	  )  # لفتح الروابط إن وجدت بشكل صحيح
+	  layout.addWidget(text_browser)
+
+	  # زر إغلاق نافذة المساعدة
+	  close_btn = QPushButton("Close", dialog)
+	  close_btn.clicked.connect(dialog.accept)
+	  layout.addWidget(close_btn)
+
+	  dialog.exec_()
 		
 	
 	def show_about(self):
